@@ -1,0 +1,1379 @@
+// No longer us this, this shall live in staticsol
+
+
+
+var ezstandalone = {
+    DEBUG: false,
+    useHost: false,
+    scriptsLoaded: false,
+    hasDisplayedAds: false,
+    placeholders: [],
+    displayCode: {},
+    cmd: typeof window.ezstandalone === "undefined" ? [] : window.ezstandalone.cmd || [],
+    initialized: false,
+    findingPlaceholders: false,
+    enabled: false,
+    isPWA: 0,
+    isForAll: false,
+    loadingStatus: "",
+    loadMoreStatus: "",
+    callDisplay: false,
+    templateId: 0,
+    templateName: "",
+    collapseEmptyDiv: false,
+    selectedPlaceholders: {},
+    wc: null,
+    disablePersonalizedStatistics: false,
+    disablePersonalizedAds: false,
+    isRefreshing: false,
+    isDestroyingSlots: false,
+    destroyedSlots: 0,
+    loadMoreQueue: [],
+    ltCacheLevel: 0,
+    hasBadWords: false,
+    worstBadWordRank: 0,
+    abTest: "",
+    numPlacementGroups: 0,
+    numCallbacks: 0,
+    targetingMap: {},
+    useEzoicAnchorAd: true,
+    measurePerformance: typeof window.performance !== 'undefined' && typeof window.performance.now !== 'undefined',
+    scriptType: {
+        load: 1,
+        loadMore: 2,
+        loadGroup: 3
+    },
+    scriptStart: {
+        1: 0,
+        2: 0,
+        3: 0
+    },
+
+    init: function () {
+        window.ezstandalone = this;
+        var self = this;
+        this.initialized = true;
+        if (this.cmd.length > 0) {
+            for (var i = 0; i < this.cmd.length; i++) {
+                if (typeof this.cmd[i] === "function") {
+                    this.cmd[i]();
+                }
+            }
+        }
+        this.cmd = {
+            push: function (f) { f(); }
+        };
+        setInterval(function() {
+            if (document.readyState !== "complete" || self.loadingStatus === 'LOADING' || self.loadMoreStatus === 'LOADING') {
+                return;
+            }
+
+            // update scriptLoaded status if necessary and if loaded loadMore
+            self.scriptsLoaded = self.scriptsLoaded === false ? self.getScriptsLoadedStatus() : self.scriptsLoaded;
+            if (!self.scriptsLoaded || self.loadMoreQueue.length === 0 || self.isDestroyingSlots) {
+                return;
+            }
+
+            // grab loadMore func from queue and run it
+            var queued = self.loadMoreQueue.shift();
+            if (typeof queued === 'function') {
+                queued();
+            }
+        }, 50);
+    },
+    reinitializeGroupVars: function() {
+        this.numPlacementGroups = 0;
+        this.displayCode = {};
+    },
+    // TODO: add some for of domain identifier for domain to ezstandaloneuser cookie
+    isEzoicUser: function (percentage, callback) {
+        var isUser = this.getCookie("ezstandaloneuser");
+
+        if (isUser === "") {
+            isUser = false;
+            var rand = Math.random() * 100;
+            if (percentage > rand) {
+                isUser = true;
+            }
+
+            var userCookie = "ezstandaloneuser=" + isUser + ";path=/;max-age=172800";
+            document.cookie = userCookie;
+        }
+
+        if (typeof callback === "function") {
+            callback(isUser);
+        }
+
+        if (typeof isUser === "string") {
+            isUser = (isUser === "true");
+        }
+
+        return isUser;
+    },
+    setTemplateInfo: function (templateId, templateName) {
+        this.templateId = templateId;
+        this.templateName = templateName;
+    },
+    define: function () {
+        this.clear();
+        var args = [].slice.call(arguments);
+        if (args.length === 1 && args[0].constructor === Array) {
+            args = args[0];
+        }
+        this.appendPlaceholders(args);
+    },
+    appendPlaceholders: function () {
+        var placeholderList = [].slice.call(arguments);
+        if (arguments.length === 1 && arguments[0].constructor === Array) {
+            placeholderList = arguments[0];
+        }
+        for (var i = 0; i < placeholderList.length; i++) {
+            var data = placeholderList[i];
+            // Verify int
+            if (data === parseInt(data, 10)) {
+                this.placeholders.push(parseInt(data, 10));
+            } else {
+                // Error
+            }
+        }
+    },
+    findAll: function () {
+        var self = this;
+
+        findingPlaceholders = true;
+        if (document.readyState === "loading") {
+            this.initialized = false;
+            document.addEventListener("readystatechange", function () {
+                if (document.readyState !== "loading") {
+                    self.findAll();
+                }
+            }, false);
+            return;
+        }
+
+        this.initialized = true;
+
+        var idPrefix = "ezoic-pub-ad-placeholder-";
+        var idPrefixLength = idPrefix.length;
+        var placeholderElems = this.getPlaceholderElems();
+
+        for (var i = 0; i < placeholderElems.length; i++) {
+            var elem = placeholderElems[i];
+            var placeholderId = parseInt(elem.id.substring(idPrefixLength), 10);
+            this.placeholders.push(placeholderId);
+        }
+
+        findingPlaceholders = false;
+    },
+    clear: function () {
+        this.placeholders = [];
+    },
+    enable: function () {
+        this.log('enable called');
+
+        var self = this;
+
+        if (document.readyState === "loading") {
+            self.log("readyState is loading in enable");
+            document.addEventListener("readystatechange", function () {
+                if (document.readyState !== "loading" && self.enabled === false) {
+                    self.enable();
+                }
+            }, false);
+            return;
+        }
+
+        if(this.findingPlaceholders == true) {
+            self.log("findingPlaceholders is true in enable");
+            setTimeout(self.enable(),50);
+        }
+
+        if (this.enabled === false) {
+            this.enabled = true;
+            this.clearPlaceholderElems();
+
+            this.log("in enable. document readyState: " + document.readyState + " loadingStatus: " + this.loadingStatus);
+            this.load(this.placeholders);
+        } else {
+            console.error("Enable should only ever be called once.");
+        }
+    },
+    setIsPWA: function () {
+        this.isPWA = 1;
+    },
+    setCollapseEmptyDiv: function (val) {
+        this.collapseEmptyDiv = val;
+    },
+    setLTCacheLevel: function (val) {
+        this.ltCacheLevel = val;
+    },
+    setHasBadWords: function (val) {
+        this.hasBadWords = val;
+    },
+    setWorstBadWordRank: function (val) {
+        this.worstBadWordRank = val;
+    },
+    setABTest: function (val) {
+        this.abTest = val;
+    },
+    setTargeting: function(key, val) {
+        if (typeof val !== 'string' && typeof val !== 'number') {
+            this.log('Only strings and numbers are allowed as values for targeting');
+            return;
+        }
+
+        if (typeof val === number) {
+            val = val.toString();
+        }
+
+        this.targetingMap[key] = val;
+    },
+    setEzoicAnchorAd: function(val) {
+        // allow truthy / falsy inputs
+        if (val) {
+            this.useEzoicAnchorAd = true;
+            return;
+        }
+
+        this.useEzoicAnchorAd = false;
+    },
+    removeTargeting: function(key) {
+        delete this.targetingMap[key];
+    },
+    setTargetingMap: function(map) {
+        var keys = Object.keys(map);
+        for (var i = 0; i < keys.length; i++) {
+            this.setTargeting(keys[i], map[keys[i]])
+        }
+    },
+    destroy: function () {
+        this.placeholders = [];
+        this.clearPlaceholderElems();
+    },
+    getPlaceholderElems: function () {
+        var idPrefix = "ezoic-pub-ad-placeholder-";
+        var idPrefixLength = idPrefix.length;
+
+        return document.querySelectorAll("[id^=" + idPrefix + "]");
+    },
+    clearPlaceholderElems: function () {
+        // grab placeholders from arguments
+        var placeholderIds = [].slice.call(arguments);
+        if (placeholderIds.length === 1 && placeholderIds[0].constructor === Array) {
+            placeholderIds = placeholderIds[0];
+        }
+
+        var placeholderElems = [];
+        if (placeholderIds.length === 0) {
+            placeholderElems = this.getPlaceholderElems();
+        } else {
+            this.log("clearing placeholders: " + placeholderIds.join(","))
+            for (var i = 0; i < placeholderIds.length; i++) {
+                var placeholder = placeholderIds[i];
+                var elementId = "ezoic-pub-ad-placeholder-" + placeholder;
+                var element = document.getElementById(elementId)
+
+                // only add elements if they exist
+                if (element !== null) {
+                    placeholderElems.push(element);
+                }
+            }
+        }
+
+        for (var i = 0; i < placeholderElems.length; i++) {
+            placeholderElems[i].innerHTML = "";
+        }
+    },
+    removePlaceholders() {
+        // grab placeholders from arguments
+        var args = [].slice.call(arguments);
+        if (args.length === 1 && args[0].constructor === Array) {
+            args = args[0];
+        }
+
+        // make placeholder list into set and conver to int
+        var pcIds = new Set();
+        args.forEach(function(pcId){
+            pcIds.add(parseInt(pcId));
+        });
+
+        // remove from placeholders
+        this.placeholders = this.placeholders.filter(function(pcId) {
+            return !(pcIds.has(pcId));
+        });
+
+        // remove from selectedPlaceholders
+        var self = this;
+        pcIds.forEach(function(pcId) {
+            if (pcId in self.selectedPlaceholders) {
+                self.log("removing ")
+                delete self.selectedPlaceholders[pcId];
+            }
+
+        });
+    },
+    removeSlots(slotNames) {
+        if (!Array.isArray(slotNames)) {
+            return;
+        }
+
+        // create set
+        var nameSet = new Set();
+        slotNames.forEach(function(name) {
+            nameSet.add(name);
+        })
+
+        // update ezslots
+        window.ezslots = window.ezslots.filter((slot) => {
+            return !nameSet.has(slot);
+        });
+
+        // update ez_ad_units
+        window.ez_ad_units = window.ez_ad_units.filter((adUnit) => {
+            //return adUnit.length >= 3 ? !nameSet.has(adUnit[2]) : false;
+            if (adUnit.length >= 3 && !nameSet.has(adUnit[2])) {
+                return true;
+            }
+            this.log("removing adUnit from ez_ad_unit: ", JSON.stringify(adUnit));
+            return false;
+        });
+    },
+    destroyPlaceholders: function() {
+        // grab placeholders from arguments
+        var args = [].slice.call(arguments);
+        if (args.length === 1 && args[0].constructor === Array) {
+            args = args[0];
+        }
+
+        // set vars
+        var self = this;
+        var slotsToDestroy = {};
+        var ezAdUnits = [];
+        var placeholdersToRemove = [];
+        var undefinedSlots = [];
+
+        // go through placeholders
+        for (var i = 0; i < args.length; i++) {
+            var pcId = args[i];
+            if (!(pcId in this.selectedPlaceholders)) {
+                // if not in placeholders then it doesn't exist
+                if (this.placeholders.indexOf(pcId) === -1) {
+                    this.log("Cannot destroy placeholder " + pcId + " because it does not exist.");
+                    continue;
+                }
+
+                // remove placeholder from placeholders and that's it
+                placeholdersToRemove.push(pcId);
+                continue;
+            }
+
+            if (typeof ez_ad_units === 'undefined') {
+                this.log("Cannot destroy placeholder if ez_ad_unit not defined");
+                return;
+            }
+
+            // grab adUnit
+            var pcAdUnit = ez_ad_units.filter((adUnit) => {
+                return adUnit.length >= 4 ? pcId === adUnit[3] : false;
+            });
+
+            // check if there are any ad units
+            if (pcAdUnit.length === 0) {
+                this.log("There isn't an ad unit for placeholder " + pcId);
+                this.log("ez_ad_units: ", JSON.stringify(ez_ad_units));
+                // no ad units but placeholders exist in ezstandalone
+                placeholdersToRemove.push(pcId);
+                continue;
+            }
+
+            // check if there are mutliple ad units for one placeholder
+            if (pcAdUnit.length > 1) {
+                this.log("There are multiple slots for placeholder " + pcId + " destroying all muahaha");
+            }
+
+            // extract slot name and check if it's defined in window
+            pcAdUnit.forEach(function(adUnit) {
+                var pcSlotName = adUnit[2];
+                if (typeof window[pcSlotName] === 'undefined') {
+                    self.log("Slot " + pcSlotName + " is undefined.");
+                    undefinedSlots.push(pcSlotName);
+                    return;
+                }
+
+                // add ad unit
+                ezAdUnits.push(adUnit);
+
+                // add slotName to slotsToDestroy
+                if (pcId in slotsToDestroy) {
+                    slotsToDestroy[pcId].push(pcSlotName);
+                    return;
+                }
+
+                slotsToDestroy[pcId] = [pcSlotName];
+            });
+
+            if (!(pcId in slotsToDestroy)) {
+                placeholdersToRemove.push(pcId);
+            }
+        }
+
+        // if there were problematic placeholders remove them from ezstandalone
+        if (placeholdersToRemove.length > 0) {
+            self.log("removing only placeholders: ", JSON.stringify(placeholdersToRemove));
+            self.removePlaceholders(placeholdersToRemove);
+        }
+
+        if (undefinedSlots.length > 0) {
+            self.log("Removing undefined slots: ", JSON.stringify(undefinedSlots));
+            self.removeSlots(undefinedSlots);
+        }
+
+        var slotNames = [];
+        Object.keys(slotsToDestroy).forEach(function(key) {
+            slotNames.push(...slotsToDestroy[key]);
+        });
+
+        // check if we have slots to destroy
+        if (slotNames.length === 0) {
+            this.log("There aren't any slots to destroy.");
+            return;
+        }
+
+        self.log("ad units about to be deleted: ", JSON.stringify(ezAdUnits));
+        // make sure ezstandalone knows we're about to destroy some slots
+        this.isDestroyingSlots = true;
+
+        // get slots objects
+        var slots = slotNames.map((slotName) => {
+            return window[slotName];
+        });
+
+        // grab ezPaths and filter out any bad paths
+        var ezAdPaths = ezAdUnits.map((adUnit) => {
+            var slot = adUnit[2];
+            if (typeof window[slot] !== 'undefined') {
+                return window[slot].getAdUnitPath();
+            }
+
+            return "";
+        }).filter((path) => {
+            return path !== "";
+        });
+
+        // make sure banger exists
+        if (typeof this.b === 'undefined' || typeof window[this.b] === 'undefined'){
+            console.error('Internal error could not destroy placeholders.');
+            this.log('Could not destroy placeholders on banger, either ezstandalone.b not instantiated or window[ezstandalone.b] not defined');
+            this.isDestroyingSlots = false;
+            return;
+        }
+
+        // set up callback for banger
+        var postBangerDestructionCallback = function(err) {
+            if (typeof err !== 'undefined') {
+                self.log('There was an error destroying slots. ERROR: ',err);
+                self.isDestroyingSlots = false;
+                return;
+            }
+
+
+            // remove placeholders from ezstandalone.placeholders and ezstandalone.selectedPlaceholders
+            self.removePlaceholders(Object.keys(slotsToDestroy));
+
+            var preEzSlotLen = window.ezslots.length;
+            var preEzAdUnitLen = window.ez_ad_units.length;
+
+            // update ezslots
+            // needs to happen before banger so banger can use window var
+            self.removeSlots(slotNames);
+
+            // remove from window._ezim_d
+            if (typeof window._ezim_d !== 'undefined') {
+                ezAdUnits.forEach(function(adUnit) {
+                    if (adUnit.length >= 2 && adUnit[1] in window._ezim_d) {
+                        delete window._ezim_d[adUnit[1]];
+                    }
+                });
+            }
+
+
+            var postEzSlotLen = window.ezslots.length;
+            var postEzAdUnitLen = window.ez_ad_units.length;
+            self.log("ezslots prelen: " + preEzSlotLen + " postLen: " + postEzSlotLen + " are equal: " + (preEzSlotLen === postEzSlotLen));
+            self.log("ezadunits prelen: " + preEzAdUnitLen + " postLen: " + postEzAdUnitLen + " are equal: " + (preEzAdUnitLen === postEzAdUnitLen));
+
+
+            // clear placeholder html
+            self.clearPlaceholderElems(Object.keys(slotsToDestroy));
+
+            // have google destroy slots
+            var success = googletag.destroySlots(slots);
+
+            if (!success) {
+                console.error("Could not destroy slots" + slotNames.join(","));
+                self.isDestroyingSlots = false;
+                return;
+            }
+
+            // remove ezslot from window
+            for (var i = 0; i < slotNames.length; i++) {
+                delete window[slotNames[i]];
+            }
+
+            // we're done destroying
+            self.isDestroyingSlots = false;
+            self.destroyedSlots += Object.keys(slotsToDestroy).length;
+        };
+
+        // destroy on banger
+        window[this.b].SendMessage(['destroy_slots', ezAdUnits, ezAdPaths, postBangerDestructionCallback]);
+    },
+    display: function (groupId, callback, scriptType) {
+        this.log("Loading status is : ", this.loadingStatus);
+        if (this.loadingStatus === "LOADING") {
+            this.callDisplay = true;
+            return false;
+        } else if (groupId > this.numPlacementGroups) {
+            this.log('Cannot display group id', groupId, 'only', this.numPlacementGroups, 'have been loaded');
+            return false;
+        }
+
+        if (document.readyState === "loading" || document.readyState === "interactive") {
+            var self = this;
+            self.log("adding display to event listener");
+            document.addEventListener("readystatechange", function () {
+                if (document.readyState === "complete") {
+                    self.display(groupId, callback);
+                }
+            }, false);
+            return false;
+        }
+
+        if (this.collapseEmptyDiv === true) {
+            // Display placeholders
+            if (this.selectedPlaceholders.length > 0) {
+                for (var id in this.selectedPlaceholders) {
+                    var elem = document.getElementById("ezoic-pub-ad-placeholder-" + id);
+                    if (elem !== null) {
+                        elem.style.display = "inline-block"
+                    }
+                }
+            }
+
+            // Hide placeholders that aren't picked
+            if (this.placeholders.length > 0) {
+                for (var i = 0; i < this.placeholders.length; i++) {
+                    var isSelected = false;
+                    // TODO: make faster no need for loop
+                    for (var id in this.selectedPlaceholders) {
+                        if (this.placeholders[i] == id) {
+                            isSelected = true;
+                            break;
+                        }
+                    }
+                    if (isSelected == false) {
+                        var elem = document.getElementById("ezoic-pub-ad-placeholder-" + this.placeholders[i]);
+                        if (elem !== null) {
+                            elem.style.display = "none"
+                        }
+                    }
+                }
+            }
+        }
+
+        if (typeof groupId === 'undefined') {
+            groupId = 0;
+        }
+
+        if (!this.displayCode.hasOwnProperty(groupId)) {
+            this.log('Missing display code for placement group ', groupId);
+            return false;
+        }
+
+        var displayCode = this.displayCode[groupId];
+        if (displayCode.length > 0) {
+            var displayScript = document.createElement("script");
+            displayScript.type = "text/javascript";
+
+            if (typeof callback === 'function') {
+                var callbackEventName = 'ezsa_cb_' + this.numCallbacks;
+                this.numCallbacks++;
+                this.log('Attaching callback to display js using event name ' + callbackEventName + ' groupId ' + groupId);
+                document.addEventListener(callbackEventName, function () {
+                    googletag.cmd.push(callback);
+                });
+                displayScript.innerHTML = displayCode + 'ezstandalone.fireEvent(document, "' + callbackEventName + '");';
+            } else {
+                displayScript.innerHTML = displayCode;
+            }
+
+            var scriptNode = document.getElementsByTagName("script")[0];
+            scriptNode.parentNode.insertBefore(displayScript, scriptNode);
+            this.displayCode[groupId] = "";
+        } else if (scriptType === this.scriptType.loadMore) {
+            // in case that there is no displayCode
+            this.log("No displayCode for loadMore");
+            this.loadMoreStatus = 'COMPLETE';
+        }
+
+        this.hasDisplayedAds = true;
+
+        return true;
+    },
+    displayMore: function() {
+        if (!this.scriptsLoaded) {
+            this.scriptsLoaded = this.getScriptsLoadedStatus();
+        }
+        if (document.readyState !== "complete" || this.loadMoreStatus === 'LOADING' || this.isDestroyingSlots) {
+            this.log('Adding to load more queue');
+            this.loadMoreQueue.push(this.loadMore.apply.bind(this.loadMore, this, arguments));
+            return;
+        }
+        this.loadMore.apply(this, arguments);
+    },
+    refresh: function () {
+        this.log('refresh called');
+
+        if (this.isRefreshing || this.loadingStatus === 'LOADING' || !this.scriptsLoaded) {
+            return;
+        }
+
+        this.isRefreshing = true;
+        this.fireEvent(document, "ezPageUnload");
+        this.clearPlaceholderElems();
+        this.load(this.placeholders, true);
+    },
+    fireEvent: function (el, type) {
+        var e;
+        if ('createEvent' in document) {
+            e = document.createEvent('HTMLEvents');
+            e.initEvent(type, false, true);
+            el.dispatchEvent(e);
+        } else {
+            e = document.createEventObject();
+            e.eventType = type;
+            el.fireEvent('on' + e.eventType, e);
+        }
+    },
+    loadGroup: function (placeholderIds, callDisplay, callDefine, newPageview, callback) {
+        this.loadingStatus = "LOADING";
+        this.log("Load Group Standalone Script Called");
+
+        if (!this.scriptsLoaded) {
+            this.log("Standalone needs to be enabled / displayed first before loading groups");
+            return;
+        }
+
+        var self = this;
+
+        var groupId = ++self.numPlacementGroups;
+        var scriptUrl = self.generateStandaloneScriptURL(placeholderIds, self.scriptType.loadGroup, groupId, newPageview);
+
+        var saBody = "";
+        if (newPageview) {
+            saBody = this.getPageviewData()
+        }
+
+        var loadFunc = function(xhr) {
+            var scriptEl = document.createElement("script");
+            scriptEl.async = true;
+            scriptEl.type = "text/javascript";
+            scriptEl.text = xhr.response;
+            scriptEl.addEventListener("load", function() {
+                self.onStandaloneLoadEvent(self.scriptType.loadGroup, callDisplay, callDefine, groupId, newPageview, callback);
+            });
+            scriptEl.onerror = function () {
+                self.isRefreshing = false;
+            };
+
+            var node = document.getElementsByTagName("script")[0];
+
+            node.parentNode.insertBefore(scriptEl, node);
+        }
+
+
+        //send the related html
+        this.sendRequest(scriptUrl, saBody, loadFunc);
+        if (self.measurePerformance) {
+            self.scriptStart[self.scriptType.loadGroup] = performance.now();
+        }
+
+        return groupId;
+    },
+    loadMore: function () {
+        this.log("Load More Standalone Script Called");
+
+        if (!this.scriptsLoaded) {
+            this.log("Standalone needs to be enabled / displayed first before loading more");
+            return;
+        }
+
+        var rawPlaceholderIds = [].slice.call(arguments);
+        if (rawPlaceholderIds.length === 1 && rawPlaceholderIds[0].constructor === Array) {
+            rawPlaceholderIds = rawPlaceholderIds[0];
+        }
+        this.log("loadmore rawPlaceholderIds: " + JSON.stringify(rawPlaceholderIds));
+
+        var placeholderIds = [];
+        for (var i = 0; i < rawPlaceholderIds.length; i++) {
+            var pcId = rawPlaceholderIds[i];
+            if (this.placeholders.indexOf(parseInt(pcId, 10)) === -1) {
+                placeholderIds.push(pcId);
+                continue;
+            }
+            console.warn('Placeholder Id ' + pcId + ' has already been defined.')
+        }
+
+        if (placeholderIds.length === 0) {
+            this.log("No valid placeholders for loadMore");
+            return;
+        }
+
+        this.loadingStatus = "LOADING";
+        this.loadMoreStatus = "LOADING";
+
+        var self = this;
+
+        var scriptUrl = self.generateStandaloneScriptURL(placeholderIds, self.scriptType.loadMore, self.numPlacementGroups);
+
+        var scriptEl = document.createElement("script");
+        scriptEl.async = true;
+        scriptEl.type = "text/javascript";
+        scriptEl.src = scriptUrl;
+        scriptEl.addEventListener("load", function() {
+            self.onStandaloneLoadEvent(self.scriptType.loadMore, true, true, self.numPlacementGroups);
+            self.placeholders.push(...placeholderIds);
+        });
+        scriptEl.onerror = function (msg) {
+            self.isRefreshing = false;
+            self.loadMoreStatus = "COMPLETE";
+            self.log("Error occurred on loadMore. ERROR: ", msg);
+        };
+
+        var node = document.getElementsByTagName("script")[0];
+
+        node.parentNode.insertBefore(scriptEl, node);
+        if (self.measurePerformance) {
+            self.scriptStart[self.scriptType.loadMore] = performance.now();
+        }
+    },
+    load: function (placeholderIds, callDisplay, callback) {
+        this.loadingStatus = "LOADING";
+        this.log("Load Standalone Script Called");
+
+        var self = this;
+        var scriptUrl = self.generateStandaloneScriptURL(placeholderIds, self.scriptType.load, self.numPlacementGroups, true);
+
+        // prepare body to send
+        var saBody = this.getPageviewData()
+
+        var loadFunc = function(xhr) {
+            var scriptEl = document.createElement("script");
+            scriptEl.type = "text/javascript";
+            scriptEl.text = xhr.response;
+            scriptEl.onerror = function () {
+                self.isRefreshing = false;
+            };
+            var node = document.getElementsByTagName("script")[0];
+            node.parentNode.insertBefore(scriptEl, node);
+            self.onStandaloneLoadEvent(self.scriptType.load, callDisplay, true, self.numPlacementGroups, true, callback);
+            // TODO: return statement may be unnecessary
+            return self.numPlacementGroups;
+        };
+
+        //send the related html
+        this.sendRequest(scriptUrl, saBody, loadFunc)
+        if (self.measurePerformance) {
+            self.scriptStart[self.scriptType.load] = performance.now();
+        }
+    },
+    sendRequest: function(scriptUrl, body, onLoadFunc) {
+        //make a POST request to get ad insert js code
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', scriptUrl, true);
+        xhr.setRequestHeader("Content-Type","text/plain");
+
+        // need to deal with the CORS
+        xhr.withCredentials = true;
+        xhr.onload = function() {
+            onLoadFunc(xhr)
+        }
+        xhr.onerror = function () {
+            self.isRefreshing = false;
+        };
+
+        //send the related html
+        xhr.send(body);
+
+    },
+    getPageviewData: function() {
+        //get all the related html element
+        var body = {};
+        var metaTags = [];
+
+        var metas = document.querySelectorAll("meta");
+        var self = this;
+        for (var i = 0; i < metas.length; i++) {
+            var e = metas[i];
+            if(e.name != "undefined" || e.property != "undefined"){
+                var metaObj = new Object();
+                for(var j = 0; j < e.attributes.length; j++) {
+                    metaObj[e.attributes[j].name] = e.attributes[j].value;
+                }
+                metaTags.push(metaObj);
+            }
+        }
+
+
+
+        var authorLink = "";
+        // check if we need to get anchor tag
+        if ('profile:username' in metaTags) {
+            anchors = document.querySelectorAll("a");
+            for (var i = 0; i < anchors.length; i++) {
+                if ('rel' in anchors[i] && anchors[i]['rel'] == "author") {
+                    authorLink = anchors[i].innerHTML;
+                    break;
+                }
+            }
+        }
+
+        body['authorLink'] = authorLink;
+
+        // add meta data to body
+        body["metas"] = metaTags;
+
+        var spanTags = {};
+        var spans = document.getElementsByTagName("span");
+        for (var i = 0; i < spans.length; i++) {
+            spanTags = self.extractNameAndValue(spans[i], spanTags);
+        }
+
+        // add span data to body
+        body["spans"] = spanTags;
+
+        //use regex to check the innerhtml of each script tag
+        var scriptTags = new Object();
+        var scripts = document.querySelectorAll("script");
+        for (var i = 0; i < scripts.length; i++){
+            var e = scripts[i];
+            if(e.innerHTML != ""){
+                // TODO: fix regex to check that regex doesn't match commented setTargeting or in a string
+                var pubRegex = /googletag\.pubads\(\).setTargeting\(\s*["'](.*)['"],\s?["'](.*)['"]\s*\)/g
+                while ((text = pubRegex.exec(e.innerHTML)) != null) {
+                    if (text[1] == "" || text[2] == "") {
+                        continue
+                    }
+
+                    if (text[1] in scriptTags) {
+                        scriptTags[text[1]].push(text[2]);
+                    } else {
+                        scriptTags[text[1]] = [text[2]]
+                    }
+                }
+            }
+        }
+
+        // add script data to body
+        body["scripts"] = scriptTags;
+
+        // get json-ld scripts
+        var ldScripts = []
+        var jsonlds = document.querySelectorAll('script[type="application/ld+json"]');
+        for (var i = 0; i < jsonlds.length; i++){
+            var e = jsonlds[i];
+            if(e.innerHTML != ""){
+                try {
+                    var jsonld = JSON.parse(e.innerHTML);
+                    ldScripts.push(jsonld);
+                } catch(e) {
+                    if (e instanceof SyntaxError) {
+                        self.log('JsonLD script not using correct syntax.')
+                    }
+                }
+            }
+        }
+
+        // add json-ld scripts to body
+        body["jsonLd"] = ldScripts;
+
+        // add cookies to body
+        var cookies = document.cookie;
+        body["cookies"] = cookies;
+
+        // prepare body and return
+        return JSON.stringify(body)
+    },
+    extractNameAndValue: function(tag, dataObj) {
+        if(tag.className == "ezTargeting"){
+            // grab name and value attributes
+            var name = tag.getAttribute('name');
+            var value = tag.getAttribute('value');
+
+            if (value == null || name == null) { return dataObj; }
+
+            if (dataObj.hasOwnProperty(name)) {
+                dataObj[name].push(value)
+            } else {
+                dataObj[name] = [value]
+            }
+        }
+        return dataObj
+    },
+    updateCookies() {
+        if (typeof ezStandaloneCookies === 'undefined') {
+            return;
+        }
+
+
+        var newCookies = JSON.parse(ezStandaloneCookies);
+        if (!Array.isArray(newCookies)) {
+            return;
+        }
+
+        for (var i = 0; i < newCookies.length; i++) {
+            document.cookie = newCookies[i];
+        }
+    },
+    getMaxSlotNumber: function() {
+        if (typeof window.ezslots === 'undefined') {
+            return -1;
+        }
+
+        var maxNum = -1;
+        for (var i = 0; i < window.ezslots.length; i++) {
+            var slot = window.ezslots[i];
+            var slotNum = parseInt(slot.split('_')[1]);
+            if (slotNum > maxNum) {
+                maxNum = slotNum;
+            }
+        }
+
+        return maxNum;
+    },
+    getCurrentAdUnits: function() {
+        if (typeof window.ez_ad_units === "undefined" || !Array.isArray(window.ez_ad_units)) {
+            return null;
+        }
+
+        var currentAdUnits = [];
+        for (var i = 0; i < window.ez_ad_units.length;i++) {
+            var adUnit = window.ez_ad_units[i][1];
+            var index = adUnit.indexOf('-') + 1;
+            var adUnitName = adUnit.slice(index);
+            currentAdUnits.push(adUnitName);
+        }
+        return currentAdUnits;
+    },
+    generateStandaloneScriptURL: function (placeholderIds, scriptType, groupId, isNewPageview) {
+        var host = window.location.host;
+        if (this.useHost === false) {
+            host = "g.ezoic.net";
+        }
+
+        var scriptUrl = "//" + host;
+        if (scriptType === this.scriptType.load) {
+            scriptUrl += "/sa.go";
+        } else if (scriptType === this.scriptType.loadMore) {
+            scriptUrl += "/samo.go";
+        } else if (scriptType === this.scriptType.loadGroup) {
+            scriptUrl += "/sag.go";
+        }
+
+        scriptUrl += "?url=" + encodeURIComponent(window.location.href);
+        scriptUrl += "&wc=" + encodeURIComponent(JSON.stringify(this.getWC()));
+        scriptUrl += "&ez_pwa=" + encodeURIComponent(JSON.stringify(this.isPWA));
+        scriptUrl += "&scriptsLoaded=" + this.scriptsLoaded;
+        scriptUrl += "&dps=" + this.disablePersonalizedStatistics;
+        scriptUrl += "&dpa=" + this.disablePersonalizedAds;
+        scriptUrl += "&d=" + placeholderIds.join(",");
+        scriptUrl += "&group=" + groupId;
+        scriptUrl += "&t=" + encodeURIComponent(JSON.stringify(this.targetingMap));
+        scriptUrl += "&a=" + this.useEzoicAnchorAd;
+
+        scriptUrl += "&fa=" + this.isForAll;
+        scriptUrl += "&uh=" + this.useHost;
+
+        if (this.abTest === "" && typeof _ezaq !== 'undefined') {
+            this.abTest = this.getCookie('ezoab_' + _ezaq['domain_id']);
+        }
+        scriptUrl += "&abt=" + this.abTest;
+
+        if (this.templateId > 0 && this.templateName !== "") {
+            scriptUrl += "&tid=" + encodeURIComponent(JSON.stringify(this.templateId));
+            scriptUrl += "&tname=" + encodeURIComponent(this.templateName);
+        }
+
+        if (scriptType === this.scriptType.load || (scriptType === this.scriptType.loadGroup && isNewPageview)) {
+            scriptUrl += "&ltcl=" + this.ltCacheLevel;
+            scriptUrl += "&bw=" + this.hasBadWords;
+            scriptUrl += "&wbr=" + this.worstBadWordRank;
+            scriptUrl += "&ref=" + encodeURIComponent(document.referrer);
+            scriptUrl += "&npv=" + true;
+        }
+
+        if (scriptType === this.scriptType.loadMore || (scriptType === this.scriptType.loadGroup && !isNewPageview)) {
+            scriptUrl += "&pid=" + _ezaq.page_view_id;
+            var displayedPlaceholders = [];
+            // try to find current placeholders if not set
+            if (Object.keys(this.selectedPlaceholders).length === 0 && typeof ezslots !== 'undefined') {
+                this.log("making all ezslot placeholders true");
+                for (var slotKey in window.ezslots) {
+                    var slot = window[ezslots[slotKey]];
+                    var vals = slot.getTargeting('ap');
+                    if (vals.length === 0) {
+                        continue;
+                    }
+
+                    var id = vals[0] % 1000;
+                    this.selectedPlaceholders[id] = true;
+                    displayedPlaceholders.push(id);
+                }
+            } else {
+                for (var id in this.selectedPlaceholders) {
+                    if (this.selectedPlaceholders[id] === true) {
+                        displayedPlaceholders.push(id);
+                    }
+                }
+            }
+            scriptUrl += "&dc=" + displayedPlaceholders.join(",");
+        }
+
+        if (this.destroyedSlots > 0) {
+            scriptUrl += "&ds=" + encodeURIComponent(this.destroyedSlots);
+        }
+
+        // send max slot number
+        scriptUrl += "&msn=" + this.getMaxSlotNumber();
+
+        // add current ad units placed
+        var cau = this.getCurrentAdUnits();
+        if (cau !== null) {
+            scriptUrl += "&cau=" + cau.join(',');
+        }
+
+        // TODO: understand how this works better and possibly rewrite it
+        if (scriptType === this.scriptType.loadGroup ) {
+            scriptUrl += "&ng=1";
+
+            if (!isNewPageview) {
+                var slotData = [];
+                for (var slotKey in window.ezslots) {
+                    var slot = window[ezslots[slotKey]];
+                    var adUnitName = slot.getSlotElementId().split('/').pop();
+                    if (adUnitName.indexOf('-0', adUnitName.length - 2) !== -1) {
+                        adUnitName = adUnitName.slice(0, adUnitName.length-2);
+                    }
+                    if( adUnitName.indexOf('-0_') !== -1 ) {
+                        adUnitName = adUnitName.replace('-0_', '_');
+                    }
+                    var ezimData = _ezim_d[adUnitName];
+                    if (!ezimData) {
+                        for (var ezimKey in _ezim_d) {
+                            if (ezimKey.split('/').pop() === adUnitName) {
+                                ezimData = _ezim_d[ezimKey];
+                            }
+                        }
+                    }
+                    slotData.push(ezimData['sub_position_id']);
+                }
+
+                if (!isNewPageview) {
+                    scriptUrl += "&slots=" + encodeURIComponent(JSON.stringify(slotData));
+                }
+            }
+        }
+
+        if (this.scriptsLoaded === false) {
+            this.scriptsLoaded = this.getScriptsLoadedStatus();
+        }
+
+        return scriptUrl;
+    },
+    onStandaloneLoadEvent: function (scriptType, callDisplay, callDefine, groupId, newPageview, callback) {
+        var self = this;
+        self.log("in onStandaloneLoadEvent");
+        self.log("scriptType: " + scriptType + " callDisplay: " + callDisplay + " groupId: " + groupId + " newPageview: " + newPageview + " typeof callback: " + typeof callback);
+        // load, loadGroup or loadMore happened, save the finishing time and store in pageview_impressions
+        if (self.measurePerformance) {
+            var loadTime = Math.round(performance.now() - self.scriptStart[scriptType]);
+            self.log("Loading Complete for " + scriptType + ". Took: " + loadTime + "ms");
+            if (scriptType === self.scriptType.load) {
+                // Just timing the main load() call for now, might add others later
+                if (typeof (_ezaq) !== "undefined" && typeof (__ez) !== "undefined" && typeof (__ez.bit) !== "undefined") {
+                    __ez.bit.Add(_ezaq["page_view_id"], [(new __ezDotData('standalone_load_time', loadTime))]);
+                }
+            }
+        }
+
+        self.updateCookies();
+        //self.syncCookies();
+        if (!callDefine && scriptType == self.scriptType.loadGroup) {
+            ezStandaloneDisplay = ezStandaloneDefine + ezStandaloneDisplay;
+        }
+        if (scriptType == self.scriptType.loadGroup && newPageview) {
+            ezStandaloneDisplay += 'ezstandalone.reinitializeGroupVars();'
+        }
+        self.displayCode[groupId] = ezStandaloneDisplay;
+
+        if (callDefine) {
+            var displayScript = document.createElement("script");
+            displayScript.type = "text/javascript";
+
+            if (!callDisplay && typeof callback === 'function') {
+                var callbackEventName = 'ezsa_cb_' + self.numCallbacks;
+                self.numCallbacks++;
+                self.log('Attaching callback to define js using event name ' + callbackEventName + ' groupId ' + groupId);
+                document.addEventListener(callbackEventName, function() {
+                    googletag.cmd.push(callback.bind(null, groupId));
+                });
+                displayScript.innerHTML = ezStandaloneDefine + 'ezstandalone.fireEvent(document, "' + callbackEventName + '");';
+            } else {
+                displayScript.innerHTML = ezStandaloneDefine;
+            }
+
+            var scriptNode = document.getElementsByTagName("script")[0];
+            scriptNode.parentNode.insertBefore(displayScript, scriptNode);
+        }
+
+        self.loadingStatus = "COMPLETE";
+        self.log("made loadingStatus complete");
+
+        for (var i = 0; i < ezSelectedPlaceholders.length; i++) {
+            var placeholderId = ezSelectedPlaceholders[i];
+            if (self.selectedPlaceholders.hasOwnProperty(placeholderId)) {
+                self.selectedPlaceholders[placeholderId] = true;
+                continue;
+            }
+
+            // need check to make sure we aren't adding deleted placeholders to selectedplaceholders
+            // actually test this because anchor ads may not be added
+            if (self.placeholders.indexOf(placeholderId) !== -1) {
+                self.selectedPlaceholders[placeholderId] = false;
+            }
+        }
+
+        if (callDisplay === true || self.callDisplay === true) {
+            if (callDefine && !callDisplay && typeof callback === 'function') {
+                callback = null;
+            }
+            if (scriptType === self.scriptType.load) {
+                self.callDisplay = false;
+                self.isRefreshing = false;
+            }
+
+            self.display(groupId, function() {
+                    if (scriptType === self.scriptType.loadMore) {
+                        self.log("Setting load more status to complete");
+                        self.loadMoreStatus = "COMPLETE";
+                    }
+
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                },
+                scriptType);
+        }
+    },
+    setWC: function (wc) {
+        this.wc = wc;
+    },
+    getWC: function () {
+        if (this.wc !== null) {
+            return this.wc;
+        }
+
+        var self = this;
+
+        if (document.readyState === "loading") {
+            document.addEventListener("readystatechange", function () {
+                if (document.readyState !== "loading") {
+                    self.getWC();
+                }
+            }, false);
+            return -1;
+        }
+
+        this.log("wc called");
+        var elem = document.body;
+        var total = 0;
+        Array.prototype.slice.call(elem.childNodes).filter(function (e) {
+            return e.nodeType === 3 || e.nodeType === 1;
+        }).forEach(function (e) {
+            if (e.textContent.trim() !== '') total += e.textContent.trim().split(' ').length;
+        });
+        return total;
+    },
+    log: function () {
+        if (this.DEBUG) {
+            console.log.apply(console, arguments);
+        }
+    },
+    ezdomain: null,
+    get_ez_domain: function () {
+
+        if (this.ezdomain == null) {
+            // if the ezdomain js variable already loaded from the page, then use it.
+            if (typeof ezdomain !== 'undefined') {
+                this.ezdomain = ezdomain;
+                return this.ezdomain;
+            }
+
+            // try to find a script that hasn't run yet that has the domain name in it
+            var i = document.evaluate("//script[contains(text(), 'ezdomain')]", document.documentElement);
+            var e = i.iterateNext();
+            if (e) {
+                var m = e.innerHTML.match(/ezdomain\s*=\s*['"]([^'"]*)['"]\s*;/);
+                if (m) {
+                    this.ezdomain = m[1];
+                }
+            }
+            // i failed, so give up, don't want this to run again
+            if (this.ezdomain == null) {
+                this.ezdomain = '';
+            }
+
+            return this.ezdomain;
+        }
+
+        // check if ezdomain was updated
+        if (typeof ezdomain !== 'undefined' && this.ezdomain !== ezdomain) {
+            this.ezdomain = ezdomain;
+        }
+
+        return this.ezdomain;
+
+    },
+
+    //sets a cookie
+    setCookie: function (cname, cvalue, exhours) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exhours * 60 * 60 * 1000));
+        var expires = "expires=" + d.toGMTString();
+        //console.log("cookie -- "+cname + "=" + cvalue + "; " + expires);
+        var c = cname + "=" + cvalue + "; " + expires + "; path=/";
+        if (this.get_ez_domain() != '') {
+            c = c + "; domain=." + this.ezdomain;
+        }
+        //console.log("cookie:" + c);
+        document.cookie = c;
+    },
+
+    getCookie: function(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for(var i = 0; i <ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    },
+
+    //loads the cookies set by the ezoic server and sets them on this domain
+    syncCookies: function () {
+        var xmlhttp;
+
+        var uproto = "http:";
+        if (document.location.protocol == "https:") {
+            uproto = document.location.protocol;
+        }
+        var url = uproto + "//g.ezoic.net/ezoic/gc.php";
+
+        xmlhttp = this.getCORS("GET", url);
+
+        var self = this;
+
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4) {
+                if (xmlhttp.status == 200) {
+                    var json_cookies = xmlhttp.responseText;
+                    //console.log("json_cookies:"+json_cookies);
+                    var ez_cookies = JSON.parse(json_cookies);
+                    //console.log("ez_cookies:"+ez_cookies);
+
+                    for (var key in ez_cookies) {
+                        if (typeof ez_cookies[key] == "undefined") {
+                            val = "";
+                        }
+                        else {
+                            val = ez_cookies[key];
+                        }
+
+                        //console.log(key+' - '+val);
+
+                        self.setCookie(key, val, self.cookieExp(key));
+                    }
+                }
+            }
+        };
+
+        //console.log('-->');
+        xmlhttp.send();
+    },
+    //gets the expiration for various cookies
+    //in hours
+    cookieExp: function (cname) {
+        if (cname.indexOf("ezoawesome") === 0) {
+            return (365 * 2);
+        }
+        if (cname.indexOf("ezouid") === 0) {
+            return (365 * 2);
+        }
+        return 2;
+    },
+    getCORS: function (method, url) {
+
+        var xmlhttp;
+
+        if (window.XMLHttpRequest) {
+            // code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp = new XMLHttpRequest();
+
+            if (typeof xmlhttp.withCredentials != "undefined") {
+                xmlhttp.open("GET", url, true);
+
+            } else if (typeof XDomainRequest != "undefined") {
+                xmlhttp = new XDomainRequest();
+                xmlhttp.open("GET", url);
+            }
+        } else {
+            // code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            xmlhttp.open("GET", url);
+        }
+
+        try {
+            xmlhttp.withCredentials = true;
+        }
+        catch (err) {
+
+        }
+        return xmlhttp;
+    },
+    setDisablePersonalizedStatistics: function (disablePersonalizedStatistics) {
+        this.disablePersonalizedStatistics = disablePersonalizedStatistics;
+    },
+    setDisablePersonalizedAds: function (disablePersonalizedAds) {
+        this.disablePersonalizedAds = disablePersonalizedAds;
+    },
+    getScriptsLoadedStatus: function() {
+        // can assume scripts were loaded if these variables are defined on page
+        if (typeof (_ezaq) !== "undefined" && typeof (_ezim_d) !== 'undefined') {
+            return true;
+        }
+
+        return false;
+    }
+};
+
+if (typeof runEzoicStandalone === "undefined" || runEzoicStandalone === true) {
+    ezstandalone.init();
+}
+
+module.exports = ezstandalone;

@@ -1,0 +1,1093 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TProjectSettingWidget</class>
+ <widget class="QWidget" name="TProjectSettingWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>965</width>
+    <height>610</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget {
+    background-color: #EEEDEB;  
+}
+</string>
+  </property>
+  <widget class="QGroupBox" name="groupBox2">
+   <property name="geometry">
+    <rect>
+     <x>151</x>
+     <y>390</y>
+     <width>311</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QGroupBox {
+    border: 2px solid #cccccc; /* Light Gray Border */
+    border-radius: 10px; /* Rounded Corners */
+}
+
+QGroupBox::title {
+	background-color: #EBD9B4;
+    color: #333333; /* Dark Gray Text Color */
+    border: 2px solid #cccccc; /* Dotted Border */
+	border-radius: 5px;
+}
+
+QComboBox {
+	background-color: #F2EFE5;
+    border: 1px solid #cccccc; /* Light Gray Border */
+    border-radius: 3px; /* Rounded Corners */
+}
+QComboBox::drop-down {
+	background-color: #cccccc;
+    border: 1px solid #cccccc; /* Light Gray Border */
+    padding: 2px; /* Adjust padding to ensure icon visibility */
+    width: 10px; /* Adjust width as needed */
+}
+
+</string>
+   </property>
+   <property name="title">
+    <string>Unit System</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <widget class="QComboBox" name="cbxUnitSystem">
+    <property name="geometry">
+     <rect>
+      <x>97</x>
+      <y>30</y>
+      <width>191</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>Field</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>SI</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Metric</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>31</y>
+      <width>30</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>80</width>
+      <height>16777215</height>
+     </size>
+    </property>
+    <property name="text">
+     <string>Units:</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox3">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>9</y>
+     <width>400</width>
+     <height>571</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>400</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QGroupBox {
+    border: 2px solid #cccccc; /* Light Gray Border */
+    border-radius: 10px; /* Rounded Corners */
+}
+
+QGroupBox::title {
+	background-color: #EBD9B4;
+    color: #333333; /* Dark Gray Text Color */
+    border: 2px solid #cccccc; /* Dotted Border */
+	border-radius: 5px;
+}
+
+QComboBox {
+	background-color: #F2EFE5;
+    border: 1px solid #cccccc; /* Light Gray Border */
+    border-radius: 3px; /* Rounded Corners */
+}
+QComboBox::drop-down {
+	background-color: #cccccc;
+    border: 1px solid #cccccc; /* Light Gray Border */
+    padding: 2px; /* Adjust padding to ensure icon visibility */
+    width: 10px; /* Adjust width as needed */
+}
+
+</string>
+   </property>
+   <property name="title">
+    <string>Simulation settings</string>
+   </property>
+   <widget class="QToolBox" name="tbSimulationSetting">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>381</width>
+      <height>521</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QToolBox {
+    background-color: #f0f0f0; /* White */
+    border-radius: 5px; /* Rounded Corners */
+}
+QToolBox::tab {
+    background-color: #f0f0f0; /* Light Gray */
+    color: #333333; /* Dark Gray Text Color */
+    border: 1px solid #cccccc; /* Light Gray Border */
+    border-radius: 3px; /* Rounded Corners */
+
+}
+
+QToolBox::tab:hover {
+    background-color: #007acc; /* Blue */
+    color: #ffffff; /* White Text Color */
+}
+</string>
+    </property>
+    <property name="currentIndex">
+     <number>3</number>
+    </property>
+    <widget class="QWidget" name="page_7">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>381</width>
+       <height>371</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>Flow correlations</string>
+     </attribute>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <item row="2" column="0" colspan="2">
+       <widget class="QFrame" name="frame">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_9">
+         <property name="leftMargin">
+          <number>4</number>
+         </property>
+         <property name="topMargin">
+          <number>4</number>
+         </property>
+         <property name="rightMargin">
+          <number>4</number>
+         </property>
+         <property name="bottomMargin">
+          <number>4</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_16">
+           <property name="minimumSize">
+            <size>
+             <width>145</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Single Phase Correlation:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="cbxSinglePhaseCorr"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_17">
+           <property name="minimumSize">
+            <size>
+             <width>145</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Swap angle:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="leSwapAngle">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>45</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QGroupBox" name="groupBox_5">
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="title">
+         <string>Horizontal Flow (Multiphase)</string>
+        </property>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>361</width>
+           <height>81</height>
+          </rect>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="minimumSize">
+             <size>
+              <width>145</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Correlation:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="cbxHorizontalFlowCorr"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="minimumSize">
+             <size>
+              <width>145</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Friction factor:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="leHFricFac">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="minimumSize">
+             <size>
+              <width>145</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Holdup factor:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="leHHoldupFac">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="title">
+         <string>Vertical Flow (Multiphase)</string>
+        </property>
+        <widget class="QComboBox" name="cbxVerticalFlowCorr">
+         <property name="geometry">
+          <rect>
+           <x>162</x>
+           <y>27</y>
+           <width>203</width>
+           <height>21</height>
+          </rect>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>27</y>
+           <width>145</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>145</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Correlation:</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_11">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>54</y>
+           <width>145</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>145</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Friction factor:</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="label_12">
+         <property name="geometry">
+          <rect>
+           <x>11</x>
+           <y>84</y>
+           <width>145</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>145</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Holdup factor:</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="leVFricFac">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>162</x>
+           <y>54</y>
+           <width>203</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+        <widget class="QLineEdit" name="leVHoldupFac">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>162</x>
+           <y>84</y>
+           <width>203</width>
+           <height>21</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="page_8">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>381</width>
+       <height>371</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>Heat transfer</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="page_9">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>381</width>
+       <height>371</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>Errosion/Corrosion</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="page_10">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>381</width>
+       <height>371</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>Environmental</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="page_11">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>381</width>
+       <height>371</height>
+      </rect>
+     </property>
+     <attribute name="label">
+      <string>Advance</string>
+     </attribute>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QFrame" name="fOptions">
+   <property name="geometry">
+    <rect>
+     <x>9</x>
+     <y>9</y>
+     <width>131</width>
+     <height>258</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>140</width>
+     <height>16777215</height>
+    </size>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_3">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item row="0" column="1">
+     <widget class="QToolBox" name="toolBox">
+      <property name="maximumSize">
+       <size>
+        <width>1000</width>
+        <height>210</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QToolBox {
+    background-color: #f0f0f0; /* White */
+    border-radius: 5px; /* Rounded Corners */
+}
+QToolBox::tab {
+    background-color: #f0f0f0; /* Light Gray */
+    color: #333333; /* Dark Gray Text Color */
+    border: 1px solid #cccccc; /* Light Gray Border */
+    border-radius: 3px; /* Rounded Corners */
+
+}
+
+QToolBox::tab:hover {
+    background-color: #007acc; /* Blue */
+    color: #ffffff; /* White Text Color */
+}
+</string>
+      </property>
+      <property name="midLineWidth">
+       <number>1</number>
+      </property>
+      <property name="currentIndex">
+       <number>5</number>
+      </property>
+      <widget class="QWidget" name="page">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>129</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <attribute name="icon">
+        <iconset>
+         <normaloff>../icon/newfile.png</normaloff>../icon/newfile.png</iconset>
+       </attribute>
+       <attribute name="label">
+        <string>New</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="page_2">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>129</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <attribute name="icon">
+        <iconset>
+         <normaloff>../icon/openFile.png</normaloff>../icon/openFile.png</iconset>
+       </attribute>
+       <attribute name="label">
+        <string>Open</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="page_3">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>129</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <attribute name="icon">
+        <iconset>
+         <normaloff>../icon/savefile.png</normaloff>../icon/savefile.png</iconset>
+       </attribute>
+       <attribute name="label">
+        <string>Save</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="page_4">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>129</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <attribute name="icon">
+        <iconset>
+         <normaloff>../icon/save as.png</normaloff>../icon/save as.png</iconset>
+       </attribute>
+       <attribute name="label">
+        <string>Save as...</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="page_5">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>129</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <attribute name="icon">
+        <iconset>
+         <normaloff>../icon/option2.png</normaloff>../icon/option2.png</iconset>
+       </attribute>
+       <attribute name="label">
+        <string>Options</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="page_6">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>129</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <attribute name="icon">
+        <iconset>
+         <normaloff>../icon/close1.png</normaloff>../icon/close1.png</iconset>
+       </attribute>
+       <attribute name="label">
+        <string>Close</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QGroupBox" name="groupBox1">
+   <property name="geometry">
+    <rect>
+     <x>151</x>
+     <y>9</y>
+     <width>310</width>
+     <height>361</height>
+    </rect>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>16777215</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QGroupBox {
+    border: 2px solid #cccccc; /* Light Gray Border */
+    border-radius: 10px; /* Rounded Corners */
+}
+
+QGroupBox::title {
+	background-color: #EBD9B4;
+    color: #333333; /* Dark Gray Text Color */
+    border: 2px solid #cccccc; /* Dotted Border */
+	border-radius: 5px;
+}
+
+QLineEdit {
+	background-color: #F2EFE5;
+    border: 1px solid #cccccc; /* Light Gray Border */
+    border-radius: 3px; /* Rounded Corners */
+}
+
+QLineEdit:focus {
+    border-color: #007acc; /* Blue border color when focused */
+}
+
+
+QDateTimeEdit {
+	background-color: #F2EFE5;
+}</string>
+   </property>
+   <property name="title">
+    <string>Well Description</string>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_5">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Reservoir:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>Date: </string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1" colspan="3">
+     <widget class="QLineEdit" name="leReservoir">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
+     <widget class="QLabel" name="label_9">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Comments:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1" colspan="3">
+     <widget class="QLineEdit" name="leComments">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>60</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1" colspan="3">
+     <widget class="QLineEdit" name="leCompany">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Well name:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1" colspan="3">
+     <widget class="QLineEdit" name="leLocation">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="1" colspan="3">
+     <widget class="QLineEdit" name="leAnalyst">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_3">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Company:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QLabel" name="label_8">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Analyst:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLabel" name="label_7">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Location:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1" colspan="3">
+     <widget class="QLineEdit" name="leWellName">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1" colspan="3">
+     <widget class="QLineEdit" name="leFluidName">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="1" colspan="3">
+     <widget class="QDateTimeEdit" name="dateTimeEdit">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_6">
+      <property name="minimumSize">
+       <size>
+        <width>80</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Fluid name:</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="darktheme">
+   <property name="geometry">
+    <rect>
+     <x>32</x>
+     <y>580</y>
+     <width>20</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton {
+    background-color: #395B64; /* Button Color */
+    color: #395B64; /* Text Color */
+    border-radius: 10px; /* Half the button's height to make it circular */
+    width: 20px; /* Adjust width and height as needed */
+    height: 20px;
+}
+
+QPushButton:hover {
+    background-color: #005f80; /* Darker color on hover */
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ClasicTheme">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>580</y>
+     <width>20</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton {
+    background-color: #FBF3D5; /* Button Color */
+    color: #FBF3D5; /* Text Color */
+    border-radius: 10px; /* Half the button's height to make it circular */
+    width: 20px; /* Adjust width and height as needed */
+    height: 20px;
+}
+
+QPushButton:hover {
+    background-color: #D8D8D8; /* Darker color on hover */
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
