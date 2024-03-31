@@ -1,1 +1,0 @@
-self.__SSG_MANIFEST=new Set(["\u002Fcolor-contrast-checker","\u002Flogin","\u002Fpalette\u002Fcreate","\u002Fpalette\u002Fedit","\u002Fuser\u002Fpalettes","\u002Fuser\u002Fsettings","\u002Fuser\u002Fshared-palette"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
